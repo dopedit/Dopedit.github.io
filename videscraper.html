@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <title>Hello, World!</title>
+</head>
+<body>
+  <h1>
+    Hello, World!
+  </h1>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Scraper v2.1</title>
+    <style>
+        :root {
+            --primary: #E47735;
+            --background: #131417;
+            --surface: #262B2E;
+            --text: #ffffff;
+            --success: #4CAF50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Fira Code', monospace;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-right: 10px;
+        }
+
+        .version-badge {
+            background: var(--primary);
+            color: var(--text);
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            position: relative;
+            top: -5px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #urlInput {
+            flex: 1;
+            padding: 12px 15px;
+            background: var(--surface);
+            border: 1px solid #3a3f45;
+            color: var(--text);
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        #urlInput:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(228, 119, 53, 0.3);
+        }
+
+        button {
+            padding: 12px 20px;
+            background: var(--primary);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: #f28240;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results-container {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #filterInput {
+            padding: 8px 12px;
+            background: var(--background);
+            border: 1px solid #3a3f45;
+            color: var(--text);
+            border-radius: 4px;
+            width: 180px;
+            font-family: inherit;
+        }
+
+        .export-btn {
+            background: var(--background);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .url-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .url-item {
+            background: var(--background);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            word-break: break-all;
+        }
+
+        .url-text {
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .url-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .copy-btn {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid #3a3f45;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: none;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #3a3f45;
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+        }
+
+        .status {
+            font-size: 14px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .copied {
+            background: var(--success) !important;
+            color: white;
+        }
+
+        #preview {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        #preview video {
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .close-preview {
+            background: transparent;
+            color: var(--text);
+            padding: 0;
+            font-size: 20px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .url-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .url-actions {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            #preview {
+                left: 20px;
+                width: calc(100% - 40px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Video Scraper</h1>
+            <span class="version-badge">v2.1</span>
+        </header>
+        
+        <div class="input-group">
+            <input type="url" id="urlInput" placeholder="Introduce la URL del sitio web a analizar..." autofocus>
+            <button id="analyzeBtn" onclick="findVideos()">
+                <span id="btnText">Analizar</span>
+                <span id="btnLoader" style="display:none;">⟳</span>
+            </button>
+        </div>
+        
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="status" id="statusText"></div>
+        
+        <div class="results-container" id="results" style="display:none;">
+            <div class="controls">
+                <div class="filter-group">
+                    <input type="text" id="filterInput" placeholder="Filtrar URLs..." oninput="filterResults()">
+                    <span id="resultCount"></span>
+                </div>
+                <button class="export-btn" onclick="exportResults()">Exportar resultados</button>
+            </div>
+            <div class="url-list" id="urlList"></div>
+        </div>
+    </div>
+    
+    <div id="preview">
+        <div class="preview-header">
+            <span>Vista previa</span>
+            <button class="close-preview" onclick="closePreview()">×</button>
+        </div>
+        <video id="previewVideo" controls></video>
+    </div>
+
+    <script>
+        // Variables globales
+        let allUrls = [];
+        let isAnalyzing = false;
+        
+        async function findVideos() {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) {
+                alert('Por favor, introduce una URL válida');
+                return;
+            }
+            
+            if (isAnalyzing) return;
+            isAnalyzing = true;
+            
+            // UI Updates
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            const statusText = document.getElementById('statusText');
+            const results = document.getElementById('results');
+            
+            btnText.textContent = 'Analizando...';
+            btnLoader.style.display = 'inline-block';
+            progressBar.style.display = 'block';
+            results.style.display = 'none';
+            statusText.textContent = 'Conectando con la página...';
+            
+            try {
+                // Animación de progreso
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 1;
+                    if (progress > 95) clearInterval(progressInterval);
+                    progressFill.style.width = `${progress}%`;
+                }, 100);
+                
+                statusText.textContent = 'Obteniendo contenido de la página...';
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                const html = await response.text();
+                
+                statusText.textContent = 'Analizando código HTML...';
+                
+                // Encontramos todas las URLs posibles
+                const foundUrls = new Set([
+                    ...findUrlsInText(html),
+                    ...findUrlsInScripts(html),
+                    ...findUrlsInAttributes(html)
+                ]);
+                
+                statusText.textContent = 'Filtrando URLs de video...';
+                
+                // Filtramos solo las que parecen ser de video
+                allUrls = Array.from(foundUrls)
+                    .filter(url => isLikelyVideoUrl(url))
+                    .map(url => cleanUrl(url));
+                
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                
+                setTimeout(() => {
+                    displayResults(allUrls);
+                    statusText.textContent = allUrls.length > 0 
+                        ? `¡Análisis completado! Se encontraron ${allUrls.length} URLs de video` 
+                        : 'Análisis completado. No se encontraron URLs de video';
+                    
+                    btnText.textContent = 'Analizar';
+                    btnLoader.style.display = 'none';
+                    isAnalyzing = false;
+                }, 500);
+                
+            } catch (error) {
+                statusText.textContent = `Error: ${error.message}`;
+                btnText.textContent = 'Analizar';
+                btnLoader.style.display = 'none';
+                progressBar.style.display = 'none';
+                isAnalyzing = false;
+            }
+        }
+
+        function findUrlsInText(text) {
+            const urlRegex = /https?:\/\/[^\s<>)"']+/g;
+            return text.match(urlRegex) || [];
+        }
+
+        function findUrlsInScripts(html) {
+            const urls = new Set();
+            
+            const patterns = [
+                /"(?:url|src|source|video_url|file|contentUrl)"\s*:\s*"([^"]+)"/g,
+                /videoUrl\s*=\s*['"]([^'"]+)['"]/g,
+                /source\s*=\s*['"]([^'"]+)['"]/g,
+                /\[\s*['"](?:240|360|480|720|1080|2160)p['"]\s*\]\s*=\s*['"]([^'"]+)['"]/g,
+                /player\.src\(\s*\{\s*src:\s*['"]([^'"]+)['"]/g,
+                /source:\s*['"]([^'"]+)['"]/g
+            ];
+
+            patterns.forEach(pattern => {
+                const matches = html.matchAll(pattern);
+                for (const match of matches) {
+                    if (match[1]) urls.add(match[1]);
+                }
+            });
+
+            return Array.from(urls);
+        }
+
+        function findUrlsInAttributes(html) {
+            const urls = new Set();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const selectors = [
+                '[data-url]',
+                '[data-video]',
+                '[data-src]',
+                '[data-source]',
+                '[src]',
+                'meta[property="og:video"]',
+                'meta[property="og:video:url"]',
+                'meta[property="og:video:secure_url"]',
+                'meta[itemprop="contentUrl"]',
+                'video source',
+                'video'
+            ];
+
+            selectors.forEach(selector => {
+                doc.querySelectorAll(selector).forEach(el => {
+                    const url = el.getAttribute('data-url') || 
+                              el.getAttribute('data-video') ||
+                              el.getAttribute('data-src') ||
+                              el.getAttribute('data-source') ||
+                              el.getAttribute('src') ||
+                              el.getAttribute('content');
+                    if (url) urls.add(url);
+                });
+            });
+
+            return Array.from(urls);
+        }
+
+        function isLikelyVideoUrl(url) {
+            const videoPatterns = [
+                /\.(mp4|webm|m3u8|ts|mov|avi|mkv|flv)(?:\?|$|\&)/i,
+                /\/embed\/|\/(video|watch|player)\//i,
+                /cdninstagram\.com.*?\/v\//i,
+                /fbcdn\.net.*?\/v\//i,
+                /player\.(vimeo|dailymotion|youtube)\.com/i,
+                /vod/i,
+                /stream/i,
+                /cloudfront\.net.*?\.(m3u8|mp4)/i,
+                /manifest/i,
+                /master\.json/i,
+                /videoplayback/i,
+                /video_id/i
+            ];
+
+            return videoPatterns.some(pattern => pattern.test(url));
+        }
+
+        function cleanUrl(url) {
+            try {
+                if (!url.startsWith('http')) {
+                    url = url.startsWith('//') ? 'https:' + url : 'https://' + url;
+                }
+                return url.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+            } catch (e) {
+                return url;
+            }
+        }
+
+        function displayResults(urls) {
+            const results = document.getElementById('results');
+            const urlList = document.getElementById('urlList');
+            const resultCount = document.getElementById('resultCount');
+            
+            results.style.display = 'block';
+            
+            if (urls.length === 0) {
+                urlList.innerHTML = '<div class="url-item">No se encontraron URLs de video</div>';
+                resultCount.textContent = '0 resultados';
+                return;
+            }
+            
+            resultCount.textContent = `${urls.length} resultados`;
+            
+            urlList.innerHTML = '';
+            urls.forEach((url, index) => {
+                const urlItem = document.createElement('div');
+                urlItem.className = 'url-item';
+                urlItem.innerHTML = `
+                    <div class="url-text">${url}</div>
+                    <div class="url-actions">
+                        <button class="copy-btn" onclick="copyToClipboard('${url.replace(/'/g, "\\'")}', this)">Copiar</button>
+                        ${canPreviewUrl(url) ? `<button class="copy-btn" onclick="previewVideo('${url.replace(/'/g, "\\'")}')">Previsualizar</button>` : ''}
+                    </div>
+                `;
+                urlList.appendChild(urlItem);
+            });
+        }
+        
+        function filterResults() {
+            const filterText = document.getElementById('filterInput').value.toLowerCase();
+            const filteredUrls = allUrls.filter(url => url.toLowerCase().includes(filterText));
+            displayResults(filteredUrls);
+        }
+        
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                button.textContent = 'Copiado ✓';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = 'Copiar';
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+            });
+        }
+        
+        function exportResults() {
+            if (allUrls.length === 0) {
+                alert('No hay resultados para exportar');
+                return;
+            }
+            
+            const text = allUrls.join('\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'video_urls.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function canPreviewUrl(url) {
+            return /\.(mp4|webm)(?:\?|$|\&)/i.test(url);
+        }
+        
+        function previewVideo(url) {
+            const preview = document.getElementById('preview');
+            const video = document.getElementById('previewVideo');
+            
+            video.src = url;
+            preview.style.display = 'block';
+            
+            video.onerror = function() {
+                alert('No se puede reproducir este video');
+                closePreview();
+            };
+        }
+        
+        function closePreview() {
+            const preview = document.getElementById('preview');
+            const video = document.getElementById('previewVideo');
+            
+            video.pause();
+            video.src = '';
+            preview.style.display = 'none';
+        }
+        
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + Enter para analizar
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                findVideos();
+            }
+            
+            // Escape para cerrar previsualizaciones
+            if (e.key === 'Escape') {
+                closePreview();
+            }
+        });
+    </script>
+</body>
+</html>
+ 

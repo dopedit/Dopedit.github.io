@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traductor de Páginas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Traductor de Páginas</h1>
+        <input type="text" id="urlInput" placeholder="Ingresa la URL de la página" />
+        <select id="languageSelect">
+            <option value="es">Español</option>
+            <option value="en">Inglés</option>
+            <option value="fr">Francés</option>
+            <option value="de">Alemán</option>
+        </select>
+        <button id="translateButton">Traducir</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('translateButton').addEventListener('click', async function() {
+            const url = document.getElementById('urlInput').value;
+            const targetLanguage = document.getElementById('languageSelect').value;
+
+            if (!url) {
+                alert('Por favor, ingresa una URL válida.');
+                return;
+            }
+
+            try {
+                // Usar un proxy para evitar bloqueos CORS
+                const proxyUrl = 'https://corsproxy.io/?';
+                const fetchUrl = proxyUrl + encodeURIComponent(url);
+
+                const response = await fetch(fetchUrl);
+                if (!response.ok) throw new Error('Error al obtener la página');
+
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const textContent = doc.body.innerText.trim();
+
+                if (!textContent) throw new Error('No se pudo extraer texto de la página');
+
+                // Traducir el texto con LibreTranslate
+                const translateResponse = await fetch('https://libretranslate.de/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        q: textContent,
+                        source: 'auto',
+                        target: targetLanguage,
+                        format: 'text'
+                    })
+                });
+
+                const translateData = await translateResponse.json();
+                if (!translateData.translatedText) throw new Error('Error en la traducción');
+
+                document.getElementById('result').innerText = translateData.translatedText;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

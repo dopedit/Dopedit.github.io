@@ -1,0 +1,478 @@
+
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+:root {
+    --primary-color: #E47735;
+    --bg-dark: #131417;
+    --editor-bg: #262B2E;
+    --text-color: #ffffff;
+    --border-radius: 8px;
+}
+
+body {
+    margin: 0;
+    background: #000;
+    color: var(--text-color);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.tabs {
+    background: var(--bg-dark);
+    padding: 10px 10px 0 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    position: relative;
+}
+
+.tab {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.tab.active {
+    background: var(--editor-bg);
+    font-weight: bold;
+}
+
+.editor-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px);
+}
+
+textarea {
+    width: 100%;
+    height: 100%;
+    background: var(--editor-bg);
+    color: var(--text-color);
+    border: none;
+    padding: 15px;
+    display: none;
+    resize: none;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 16px;
+    box-sizing: border-box;
+    line-height: 1.5;
+    tab-size: 2;
+}
+
+textarea::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+textarea.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}
+
+.button-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+}
+
+.action-button {
+    width: 60px;
+    height: 60px;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.3s;
+    background: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.action-button:hover {
+    transform: scale(1.1);
+    background: #f58c45;
+}
+
+#preview-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.92);
+    display: none;
+    z-index: 1000;
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#preview-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}
+
+#close-preview {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--primary-color);
+    z-index: 1001;
+}
+
+.claudit-brand {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    color: var(--primary-color);
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 100;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    user-select: none;
+}
+
+.file-input-container {
+    position: absolute;
+    top: 50%;
+    right: 85px;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.file-input {
+    display: none;
+}
+
+.file-label {
+    padding: 8px 12px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.file-label:hover {
+    transform: scale(1.05);
+    background: #f58c45;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .tabs {
+        padding: 5px 5px 0 5px;
+    }
+    
+    .tab {
+        padding: 8px 16px;
+        font-size: 14px;
+        flex: 1;
+        text-align: center;
+    }
+    
+    textarea {
+        font-size: 14px;
+        padding: 10px;
+    }
+    
+    .action-button {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .button-container {
+        bottom: 10px;
+        right: 10px;
+        gap: 5px;
+    }
+    
+    .claudit-brand {
+        font-size: 20px;
+        top: 10px;
+        left: 10px;
+    }
+    
+    .file-input-container {
+        position: relative;
+        top: unset;
+        right: unset;
+        transform: none;
+        width: 100%;
+        margin-top: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .file-label {
+        flex: 1;
+        text-align: center;
+        font-size: 10px;
+        padding: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tab {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    textarea {
+        font-size: 12px;
+        padding: 8px;
+    }
+    
+    .action-button {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .claudit-brand {
+        font-size: 16px;
+    }
+}</style>
+                </head>
+                <body>
+                    <!DOCTYPE html>
+
+<html>
+<head>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <title>Hello, World!</title>
+</head>
+<body>
+  <h1>
+    Hello, World!
+  </h1>
+</body>
+</html>
+`html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claudit - Editor Web Mejorado</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="claudit-brand">Claudit</div>
+    
+    <div class="editor-container">
+        <div class="tabs">
+            <button class="tab active" id="tabHtml">HTML</button>
+            <button class="tab" id="tabCss">CSS</button>
+            <button class="tab" id="tabJs">JS</button>
+            <div class="file-input-container">
+                <input type="file" id="fileHtml" class="file-input" accept=".html,.htm">
+                <input type="file" id="fileCss" class="file-input" accept=".css">
+                <input type="file" id="fileJs" class="file-input" accept=".js">
+                <label for="fileHtml" class="file-label">Cargar HTML</label>
+                <label for="fileCss" class="file-label">Cargar CSS</label>
+                <label for="fileJs" class="file-label">Cargar JS</label>
+            </div>
+        </div>
+        
+        <textarea id="html" class="active" spellcheck="false" placeholder="Escribe tu código HTML aquí..."></textarea>
+        <textarea id="css" spellcheck="false" placeholder="Escribe tu código CSS aquí..."></textarea>
+        <textarea id="js" spellcheck="false" placeholder="Escribe tu código JavaScript aquí..."></textarea>
+    </div>
+    
+    <div class="button-container">
+        <button id="run" class="action-button" title="Ejecutar">▶</button>
+        <button id="download" class="action-button" title="Descargar">⭳</button>
+        <button id="clear" class="action-button" title="Limpiar">🗑️</button>
+    </div>
+    
+    <div id="preview-container">
+        <button id="close-preview" class="action-button">✕</button>
+        <iframe id="preview-iframe"></iframe>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+
+                    <script>// Manejo de pestañas
+let tabs = document.querySelectorAll('.tab');
+let areas = document.querySelectorAll('textarea');
+
+// Guardar el estado en localStorage
+function saveToLocalStorage() {
+    localStorage.setItem('clauditHtml', document.getElementById('html').value);
+    localStorage.setItem('clauditCss', document.getElementById('css').value);
+    localStorage.setItem('clauditJs', document.getElementById('js').value);
+    localStorage.setItem('clauditLastUpdated', new Date().toISOString());
+}
+
+// Cargar el estado desde localStorage
+function loadFromLocalStorage() {
+    const html = localStorage.getItem('clauditHtml');
+    const css = localStorage.getItem('clauditCss');
+    const js = localStorage.getItem('clauditJs');
+    
+    if (html) document.getElementById('html').value = html;
+    if (css) document.getElementById('css').value = css;
+    if (js) document.getElementById('js').value = js;
+}
+
+// Cargar estado al iniciar
+document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
+
+// Cambiar entre pestañas
+tabs.forEach(tab => {
+    tab.onclick = () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        areas.forEach(a => a.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(tab.id.substring(3).toLowerCase()).classList.add('active');
+    }
+});
+
+// Guardar automáticamente al escribir
+areas.forEach(area => {
+    area.addEventListener('input', () => {
+        saveToLocalStorage();
+    });
+});
+
+// Compilar HTML, CSS y JS
+function getCompiledHTML() {
+    return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>${document.getElementById('css').value}</style>
+</head>
+<body>
+    ${document.getElementById('html').value}
+    <script>${document.getElementById('js').value}<\/script>
+</body>
+</html>`;
+}
+
+// Ejecutar código
+document.getElementById('run').onclick = () => {
+    const previewContainer = document.getElementById('preview-container');
+    const previewIframe = document.getElementById('preview-iframe');
+    
+    // Guardar estado actual
+    saveToLocalStorage();
+    
+    // Mostrar la vista previa
+    previewContainer.style.display = 'block';
+    previewIframe.srcdoc = getCompiledHTML();
+}
+
+// Cerrar vista previa
+document.getElementById('close-preview').onclick = () => {
+    document.getElementById('preview-container').style.display = 'none';
+}
+
+// Descargar archivo HTML
+document.getElementById('download').onclick = () => {
+    const file = getCompiledHTML();
+    const blob = new Blob([file], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    link.href = url;
+    link.download = 'claudit-proyecto.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Nuevo botón para limpiar editor
+document.getElementById('clear').onclick = () => {
+    if (confirm('¿Estás seguro de que quieres limpiar todo el código?')) {
+        document.getElementById('html').value = '';
+        document.getElementById('css').value = '';
+        document.getElementById('js').value = '';
+        saveToLocalStorage();
+    }
+}
+
+// Cargar archivos 
+function handleFileSelect(fileInput, textareaId) {
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById(textareaId).value = e.target.result;
+                saveToLocalStorage();
+            };
+            reader.readAsText(file);
+        }
+    });
+}
+
+// Configurar los manejadores de archivo para cada tipo
+handleFileSelect(document.getElementById('fileHtml'), 'html');
+handleFileSelect(document.getElementById('fileCss'), 'css');
+handleFileSelect(document.getElementById('fileJs'), 'js');
+
+// Soporte para atajos de teclado
+document.addEventListener('keydown', function(e) {
+    // Ctrl+S para ejecutar
+    if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        document.getElementById('run').click();
+    }
+    
+    // Ctrl+D para descargar
+    if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        document.getElementById('download').click();
+    }
+    
+    // Tab para indentación en las áreas de texto
+    if (e.key === 'Tab' && document.activeElement.tagName === 'TEXTAREA') {
+        e.preventDefault();
+        const start = document.activeElement.selectionStart;
+        const end = document.activeElement.selectionEnd;
+        
+        document.activeElement.value = document.activeElement.value.substring(0, start) + '  ' + document.activeElement.value.substring(end);
+        document.activeElement.selectionStart = document.activeElement.selectionEnd = start + 2;
+        saveToLocalStorage();
+    }
+});</script>
+                </body>
+            </html>
+        

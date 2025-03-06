@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extractor de Código Fuente Avanzado</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input[type="url"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: #fff;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #0098ff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0076c6;
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .search-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background-color: #2d2d2d;
+            padding: 10px;
+            border-radius: 4px;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: #fff;
+        }
+        .match-count {
+            color: #0098ff;
+        }
+        .code-container {
+            position: relative;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        pre[class*="language-"] {
+            margin: 0;
+            padding: 20px;
+            max-height: 600px;
+            overflow: auto;
+        }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            background-color: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 4px;
+        }
+        .highlight {
+            background-color: #ffeb3b;
+            color: #000;
+        }
+        .error {
+            background-color: #ff5252;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .status-bar {
+            background-color: #2d2d2d;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #888;
+        }
+        .line-numbers .line-numbers-rows {
+            padding: 20px 0;
+        }
+        #formatSelect {
+            padding: 8px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Extractor de Código Fuente Avanzado</h1>
+            <div class="input-group">
+                <input type="url" id="urlInput" placeholder="Introduce la URL del sitio web (incluyendo https://)" required>
+                <button onclick="getSourceCode()">Obtener Código</button>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <select id="formatSelect" onchange="reformatCode()">
+                <option value="html">HTML</option>
+                <option value="javascript">JavaScript</option>
+                <option value="css">CSS</option>
+            </select>
+            <button onclick="copyToClipboard()">Copiar al Portapapeles</button>
+            <button onclick="downloadCode()">Descargar</button>
+            <button onclick="formatCode()">Formatear Código</button>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar en el código...">
+            <button onclick="search(true)">Buscar</button>
+            <button onclick="search(false)">Anterior</button>
+            <span class="match-count" id="matchCount"></span>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div class="code-container">
+            <pre id="sourceCode" class="line-numbers"><code class="language-html"></code></pre>
+            <div id="loading" class="loading" style="display: none;">Cargando...</div>
+        </div>
+
+        <div class="status-bar">
+            <span id="lineCount">Líneas: 0</span>
+            <span id="charCount">Caracteres: 0</span>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/components/prism-css.min.js"></script>
+    <script>
+        let currentSearchIndex = -1;
+        let searchMatches = [];
+        let sourceCodeText = '';
+
+        async function getSourceCode() {
+            const urlInput = document.getElementById('urlInput');
+            const sourceCodeElement = document.querySelector('#sourceCode code');
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error');
+            
+            errorElement.style.display = 'none';
+            loadingElement.style.display = 'block';
+            sourceCodeElement.textContent = '';
+
+            try {
+                const url = urlInput.value;
+                if (!url) {
+                    throw new Error('Por favor, introduce una URL válida');
+                }
+
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) {
+                    throw new Error('Error al obtener el código fuente');
+                }
+
+                sourceCodeText = await response.text();
+                updateCodeDisplay(sourceCodeText);
+                updateStats();
+                
+            } catch (error) {
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+
+        function updateCodeDisplay(code) {
+            const sourceCodeElement = document.querySelector('#sourceCode code');
+            sourceCodeElement.textContent = code;
+            sourceCodeElement.className = `language-${document.getElementById('formatSelect').value}`;
+            Prism.highlightElement(sourceCodeElement);
+        }
+
+        function updateStats() {
+            const lines = sourceCodeText.split('\n').length;
+            const chars = sourceCodeText.length;
+            document.getElementById('lineCount').textContent = `Líneas: ${lines}`;
+            document.getElementById('charCount').textContent = `Caracteres: ${chars}`;
+        }
+
+        function reformatCode() {
+            if (sourceCodeText) {
+                updateCodeDisplay(sourceCodeText);
+            }
+        }
+
+        function search(forward = true) {
+            const searchInput = document.getElementById('searchInput').value;
+            if (!searchInput) return;
+
+            // Eliminar resaltados anteriores
+            const sourceCodeElement = document.querySelector('#sourceCode code');
+            sourceCodeElement.innerHTML = sourceCodeElement.innerHTML.replace(/<mark class="highlight">(.*?)<\/mark>/g, '$1');
+
+            // Encontrar todas las coincidencias
+            const regex = new RegExp(searchInput, 'gi');
+            searchMatches = [...sourceCodeText.matchAll(regex)];
+            
+            if (searchMatches.length > 0) {
+                if (forward) {
+                    currentSearchIndex = (currentSearchIndex + 1) % searchMatches.length;
+                } else {
+                    currentSearchIndex = currentSearchIndex <= 0 ? searchMatches.length - 1 : currentSearchIndex - 1;
+                }
+
+                const match = searchMatches[currentSearchIndex];
+                const beforeMatch = sourceCodeText.substring(0, match.index);
+                const afterMatch = sourceCodeText.substring(match.index + searchInput.length);
+                
+                sourceCodeElement.innerHTML = beforeMatch +
+                    `<mark class="highlight">${sourceCodeText.substr(match.index, searchInput.length)}</mark>` +
+                    afterMatch;
+                
+                document.getElementById('matchCount').textContent = 
+                    `${currentSearchIndex + 1} de ${searchMatches.length} coincidencias`;
+
+                // Scroll to match
+                const highlight = sourceCodeElement.querySelector('.highlight');
+                if (highlight) {
+                    highlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else {
+                document.getElementById('matchCount').textContent = 'No se encontraron coincidencias';
+            }
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(sourceCodeText)
+                .then(() => alert('Código copiado al portapapeles'))
+                .catch(err => alert('Error al copiar el código'));
+        }
+
+        function downloadCode() {
+            const blob = new Blob([sourceCodeText], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'source-code.' + document.getElementById('formatSelect').value;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        function formatCode() {
+            try {
+                let formatted = sourceCodeText;
+                const format = document.getElementById('formatSelect').value;
+                
+                // Formatting logic for different types
+                if (format === 'html') {
+                    formatted = formatHTML(formatted);
+                } else if (format === 'javascript') {
+                    formatted = formatJS(formatted);
+                } else if (format === 'css') {
+                    formatted = formatCSS(formatted);
+                }
+                
+                sourceCodeText = formatted;
+                updateCodeDisplay(formatted);
+            } catch (error) {
+                alert('Error al formatear el código');
+            }
+        }
+
+        function formatHTML(code) {
+            let formatted = '';
+            let indent = 0;
+            const lines = code.split('\n');
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (line.match(/<\/.+>/)) {
+                    indent--;
+                }
+                formatted += '  '.repeat(Math.max(0, indent)) + line + '\n';
+                if (line.match(/<[^/].+>/) && !line.match(/<.+\/>/) && !line.match(/<.+>.+<\/.+>/)) {
+                    indent++;
+                }
+            }
+            return formatted;
+        }
+
+        function formatJS(code) {
+            let formatted = '';
+            let indent = 0;
+            const lines = code.split('\n');
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (line.includes('}')) indent--;
+                formatted += '  '.repeat(Math.max(0, indent)) + line + '\n';
+                if (line.includes('{')) indent++;
+            }
+            return formatted;
+        }
+
+        function formatCSS(code) {
+            let formatted = '';
+            let indent = 0;
+            const lines = code.split('\n');
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (line.includes('}')) indent--;
+                formatted += '  '.repeat(Math.max(0, indent)) + line + '\n';
+                if (line.includes('{')) indent++;
+            }
+            return formatted;
+        }
+
+        // Inicializar búsqueda al presionar Enter
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                search(true);
+            }
+        });
+    </script>
+</body>
+</html>

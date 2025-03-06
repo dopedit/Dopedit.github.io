@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #131417;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #262B2E;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            color: #E47735;
+            font-size: 1.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            background-color: #262B2E;
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid #131417;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #fff;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .tab.active {
+            background-color: #E47735;
+        }
+
+        .tab:hover:not(.active) {
+            background-color: #3a4145;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        .preview-container {
+            flex: 1;
+            padding: 1rem;
+            display: none;
+            background-color: #262B2E;
+            overflow: auto;
+        }
+
+        .analyzer-container {
+            flex: 1;
+            padding: 1rem;
+            display: none;
+            background-color: #262B2E;
+            overflow: auto;
+        }
+
+        .preview-container.active,
+        .analyzer-container.active {
+            display: block;
+        }
+
+        #codeEditor {
+            width: 100%;
+            height: calc(100vh - 200px);
+            background-color: #262B2E;
+            border: none;
+            border-radius: 4px;
+            padding: 1rem;
+            color: white;
+            font-family: monospace;
+            resize: none;
+            outline: none;
+        }
+
+        .console {
+            background-color: #262B2E;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: auto;
+            height: 150px;
+            overflow-y: auto;
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            color: #E47735;
+        }
+
+        .console-clear {
+            background: none;
+            border: 1px solid #E47735;
+            color: #E47735;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .console-clear:hover {
+            background-color: rgba(228, 119, 53, 0.1);
+        }
+
+        .error-message {
+            color: #ff4444;
+            margin: 0.25rem 0;
+            font-family: monospace;
+        }
+
+        .warning-message {
+            color: #ffbb33;
+            margin: 0.25rem 0;
+            font-family: monospace;
+        }
+
+        .info-message {
+            color: #33b5e5;
+            margin: 0.25rem 0;
+            font-family: monospace;
+        }
+
+        .analyzer-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: rgba(228, 119, 53, 0.1);
+            border-radius: 4px;
+        }
+
+        .analyzer-title {
+            color: #E47735;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .main-container {
+                flex-direction: row;
+            }
+
+            .editor-container {
+                flex: 1;
+            }
+
+            .preview-container,
+            .analyzer-container {
+                flex: 1;
+                border-left: 2px solid #131417;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .preview-container,
+            .analyzer-container {
+                border-top: 2px solid #131417;
+            }
+
+            #codeEditor {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>HTML Analyzer</h1>
+    </header>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="editor">Editor</button>
+        <button class="tab" data-tab="preview">Vista Previa</button>
+        <button class="tab" data-tab="analyzer">Analizador</button>
+    </div>
+
+    <div class="main-container">
+        <div class="editor-container">
+            <textarea id="codeEditor" placeholder="Escribe o pega tu código HTML aquí..." spellcheck="false"></textarea>
+            <div class="console">
+                <div class="console-header">
+                    <span>Consola</span>
+                    <button class="console-clear">Limpiar</button>
+                </div>
+                <div id="consoleOutput"></div>
+            </div>
+        </div>
+
+        <div class="preview-container">
+            <iframe id="preview" style="width: 100%; height: 100%; border: none; background-color: white;"></iframe>
+        </div>
+
+        <div class="analyzer-container">
+            <div id="analyzerOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const codeEditor = document.getElementById('codeEditor');
+        const preview = document.getElementById('preview');
+        const consoleOutput = document.getElementById('consoleOutput');
+        const analyzerOutput = document.getElementById('analyzerOutput');
+        const tabs = document.querySelectorAll('.tab');
+        const containers = document.querySelectorAll('.preview-container, .analyzer-container');
+        const clearConsoleBtn = document.querySelector('.console-clear');
+
+        let debounceTimer;
+
+        // Cambio de pestañas
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                containers.forEach(c => c.classList.remove('active'));
+                if (tab.dataset.tab !== 'editor') {
+                    document.querySelector(`.${tab.dataset.tab}-container`).classList.add('active');
+                }
+
+                updateContent();
+            });
+        });
+
+        // Actualizar contenido con debounce
+        function updateContent() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const code = codeEditor.value;
+                
+                // Actualizar vista previa
+                if (document.querySelector('[data-tab="preview"]').classList.contains('active')) {
+                    updatePreview(code);
+                }
+
+                // Actualizar analizador
+                if (document.querySelector('[data-tab="analyzer"]').classList.contains('active')) {
+                    analyzeCode(code);
+                }
+
+            }, 500);
+        }
+
+        // Manejar entrada de código
+        codeEditor.addEventListener('input', updateContent);
+
+        // Actualizar vista previa
+        function updatePreview(code) {
+            try {
+                const doc = preview.contentWindow.document;
+                doc.open();
+                doc.write(code);
+                doc.close();
+                logMessage('Vista previa actualizada', 'info');
+            } catch (error) {
+                logMessage(`Error en la vista previa: ${error.message}`, 'error');
+            }
+        }
+
+        // Analizar código
+        function analyzeCode(code) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(code, 'text/html');
+                const analysis = [];
+
+                // Analizar estructura
+                analysis.push({
+                    title: 'Estructura Básica',
+                    content: validateStructure(doc)
+                });
+
+                // Analizar elementos
+                analysis.push({
+                    title: 'Elementos HTML',
+                    content: analyzeElements(doc)
+                });
+
+                // Analizar accesibilidad
+                analysis.push({
+                    title: 'Accesibilidad',
+                    content: analyzeAccessibility(doc)
+                });
+
+                // Mostrar resultados
+                analyzerOutput.innerHTML = analysis.map(item => `
+                    <div class="analyzer-item">
+                        <h3 class="analyzer-title">${item.title}</h3>
+                        <div>${item.content}</div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                logMessage(`Error en el análisis: ${error.message}`, 'error');
+            }
+        }
+
+        // Validar estructura básica
+        function validateStructure(doc) {
+            const issues = [];
+            
+            if (!doc.doctype) {
+                issues.push('Falta la declaración DOCTYPE');
+            }
+            
+            if (!doc.querySelector('html')) {
+                issues.push('Falta el elemento html');
+            }
+            
+            if (!doc.querySelector('head')) {
+                issues.push('Falta el elemento head');
+            }
+            
+            if (!doc.querySelector('body')) {
+                issues.push('Falta el elemento body');
+            }
+            
+            if (!doc.querySelector('title')) {
+                issues.push('Falta el elemento title');
+            }
+
+            return issues.length ? 
+                `<ul>${issues.map(issue => `<li>${issue}</li>`).join('')}</ul>` : 
+                'La estructura básica es correcta';
+        }
+
+        // Analizar elementos
+        function analyzeElements(doc) {
+            const elements = doc.getElementsByTagName('*');
+            const stats = {
+                total: elements.length,
+                types: {}
+            };
+
+            for (let el of elements) {
+                stats.types[el.tagName] = (stats.types[el.tagName] || 0) + 1;
+            }
+
+            return `
+                <p>Total de elementos: ${stats.total}</p>
+                <p>Elementos por tipo:</p>
+                <ul>
+                    ${Object.entries(stats.types)
+                        .map(([tag, count]) => `<li>${tag.toLowerCase()}: ${count}</li>`)
+                        .join('')}
+                </ul>
+            `;
+        }
+
+        // Analizar accesibilidad
+        function analyzeAccessibility(doc) {
+            const issues = [];
+            
+            const images = doc.getElementsByTagName('img');
+            for (let img of images) {
+                if (!img.hasAttribute('alt')) {
+                    issues.push(`Imagen sin atributo alt: ${img.outerHTML.slice(0, 50)}...`);
+                }
+            }
+
+            const headings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+            if (!headings.length) {
+                issues.push('No se encontraron encabezados en el documento');
+            }
+
+            const links = doc.getElementsByTagName('a');
+            for (let link of links) {
+                if (!link.textContent.trim()) {
+                    issues.push('Enlace sin texto descriptivo');
+                }
+            }
+
+            return issues.length ? 
+                `<ul>${issues.map(issue => `<li>${issue}</li>`).join('')}</ul>` : 
+                'No se encontraron problemas de accesibilidad básicos';
+        }
+
+        // Función para mostrar mensajes en la consola
+        function logMessage(message, type = 'info') {
+            const div = document.createElement('div');
+            div.classList.add(`${type}-message`);
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleOutput.appendChild(div);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // Limpiar consola
+        clearConsoleBtn.addEventListener('click', () => {
+            consoleOutput.innerHTML = '';
+        });
+
+        // Mensaje inicial
+        logMessage('Editor HTML iniciado', 'info');
+    </script>
+</body>
+</html>

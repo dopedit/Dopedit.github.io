@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Contenido Multimedia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .search-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .url-input {
+            width: 80%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .search-button {
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-button:hover {
+            background-color: #0056b3;
+        }
+
+        .search-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .media-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .media-item img, 
+        .media-item video {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .media-item audio {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .media-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .error {
+            background-color: #fee;
+            color: #c00;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form class="search-form" id="searchForm">
+            <input 
+                type="url" 
+                class="url-input" 
+                id="urlInput" 
+                placeholder="Ingresa la URL del sitio web"
+                required
+            >
+            <button type="submit" class="search-button" id="searchButton">
+                Buscar Contenido
+            </button>
+        </form>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">
+            Buscando contenido multimedia...
+        </div>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        class MediaFinder {
+            constructor() {
+                this.form = document.getElementById('searchForm');
+                this.urlInput = document.getElementById('urlInput');
+                this.searchButton = document.getElementById('searchButton');
+                this.resultsContainer = document.getElementById('results');
+                this.loadingElement = document.getElementById('loading');
+                this.errorElement = document.getElementById('error');
+                
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                this.form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.searchMedia();
+                });
+            }
+
+            async searchMedia() {
+                const url = this.urlInput.value;
+                if (!url) return;
+
+                this.showLoading(true);
+                this.showError('');
+                this.clearResults();
+                this.searchButton.disabled = true;
+
+                try {
+                    // Utilizamos un proxy CORS para poder acceder al contenido
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                    const response = await fetch(proxyUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error('Error al acceder a la URL');
+                    }
+
+                    const data = await response.json();
+                    const html = data.contents;
+                    
+                    // Crear un DOM temporal para analizar el HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const mediaElements = {
+                        images: Array.from(doc.getElementsByTagName('img')),
+                        videos: Array.from(doc.getElementsByTagName('video')),
+                        audio: Array.from(doc.getElementsByTagName('audio'))
+                    };
+
+                    this.displayResults(mediaElements, url);
+                } catch (error) {
+                    this.showError('Error al procesar la URL: ' + error.message);
+                } finally {
+                    this.showLoading(false);
+                    this.searchButton.disabled = false;
+                }
+            }
+
+            displayResults(mediaElements, baseUrl) {
+                if (Object.values(mediaElements).every(arr => arr.length === 0)) {
+                    this.showError('No se encontró contenido multimedia en esta URL');
+                    return;
+                }
+
+                mediaElements.images.forEach(img => {
+                    const src = this.resolveUrl(img.src || img.getAttribute('src'), baseUrl);
+                    if (src) {
+                        this.createMediaElement('img', src, {
+                            alt: img.alt,
+                            dimensions: `${img.width || 'Auto'} x ${img.height || 'Auto'}`
+                        });
+                    }
+                });
+
+                mediaElements.videos.forEach(video => {
+                    const src = this.resolveUrl(video.src || video.getAttribute('src'), baseUrl);
+                    if (src) {
+                        this.createMediaElement('video', src, {
+                            type: video.getAttribute('type') || 'video/mp4'
+                        });
+                    }
+                });
+
+                mediaElements.audio.forEach(audio => {
+                    const src = this.resolveUrl(audio.src || audio.getAttribute('src'), baseUrl);
+                    if (src) {
+                        this.createMediaElement('audio', src, {
+                            type: audio.getAttribute('type') || 'audio/mpeg'
+                        });
+                    }
+                });
+            }
+
+            createMediaElement(type, src, info) {
+                const mediaItem = document.createElement('div');
+                mediaItem.className = 'media-item';
+
+                let mediaElement;
+                switch (type) {
+                    case 'img':
+                        mediaElement = document.createElement('img');
+                        mediaElement.src = src;
+                        mediaElement.alt = info.alt || 'Imagen';
+                        break;
+                    case 'video':
+                        mediaElement = document.createElement('video');
+                        mediaElement.src = src;
+                        mediaElement.controls = true;
+                        break;
+                    case 'audio':
+                        mediaElement = document.createElement('audio');
+                        mediaElement.src = src;
+                        mediaElement.controls = true;
+                        break;
+                }
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'media-info';
+                infoDiv.innerHTML = `
+                    <p>Tipo: ${type.toUpperCase()}</p>
+                    ${info.dimensions ? `<p>Dimensiones: ${info.dimensions}</p>` : ''}
+                    <p>URL: <a href="${src}" target="_blank">Ver original</a></p>
+                `;
+
+                mediaItem.appendChild(mediaElement);
+                mediaItem.appendChild(infoDiv);
+                this.resultsContainer.appendChild(mediaItem);
+            }
+
+            resolveUrl(url, baseUrl) {
+                if (!url) return null;
+                try {
+                    return new URL(url, baseUrl).href;
+                } catch {
+                    return null;
+                }
+            }
+
+            showLoading(show) {
+                this.loadingElement.style.display = show ? 'block' : 'none';
+            }
+
+            showError(message) {
+                this.errorElement.textContent = message;
+                this.errorElement.style.display = message ? 'block' : 'none';
+            }
+
+            clearResults() {
+                this.resultsContainer.innerHTML = '';
+            }
+        }
+
+        // Inicializar la aplicación
+        new MediaFinder();
+    </script>
+</body>
+</html>

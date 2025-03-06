@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Presupuesto Carpinter�a</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            font-size: 16px;
+        }
+        .presupuesto {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            font-size: 18px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f8f8;
+            font-size: 18px;
+        }
+        .concept-input {
+            font-size: 18px;
+            width: 100%;
+            min-width: 200px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .quantity-input, .currency-input {
+            font-size: 18px;
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .total {
+            font-size: 20px;
+            text-align: right;
+            margin-top: 30px;
+            padding: 20px 0;
+            border-top: 2px solid #333;
+        }
+        .notes {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f8f8;
+            border-radius: 4px;
+            font-size: 18px;
+        }
+        .notes ul {
+            padding-left: 20px;
+        }
+        .notes li {
+            margin-bottom: 10px;
+        }
+        .contact {
+            margin-top: 40px;
+            text-align: center;
+            color: #333;
+            font-size: 16px;
+        }
+        .buttons {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .add-row-btn {
+            background-color: #2196F3;
+        }
+        .cliente-info {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .cliente-info input {
+            font-size: 18px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            margin-left: 10px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .descripcion {
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        @media print {
+            body {
+                background: white;
+            }
+            .presupuesto {
+                box-shadow: none;
+            }
+            .buttons {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presupuesto">
+        <div class="header">
+            <h1>Presupuesto</h1>
+            <p>Fecha: <span id="fecha">DD/MM/AAAA</span></p>
+            <p>Presupuesto #: <span id="numero">001</span></p>
+        </div>
+
+        <div class="cliente-info">
+            <p>Nombre: <input type="text" placeholder="Nombre del cliente"></p>
+            <p>Direcci�n: <input type="text" placeholder="Direcci�n del cliente"></p>
+            <p>Tel�fono: <input type="text" placeholder="Tel�fono del cliente"></p>
+        </div>
+
+        <div class="descripcion">
+            <h3>Descripci�n del Proyecto:</h3>
+            <p>...... (120 x 120 cm)</p>
+        </div>
+
+        <table id="itemsTable">
+            <thead>
+                <tr>
+                    <th>Concepto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="concept-input" value="Palets"></td>
+                    <td><input type="number" class="quantity-input" value="3" min="0"></td>
+                    <td><input type="number" class="currency-input" value="60" min="0"></td>
+                    <td class="row-total">$180.00</td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="concept-input" value="Tornillos y clavos"></td>
+                    <td><input type="number" class="quantity-input" value="1" min="0"></td>
+                    <td><input type="number" class="currency-input" value="50" min="0"></td>
+                    <td class="row-total">$50.00</td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="concept-input" value="Lija"></td>
+                    <td><input type="number" class="quantity-input" value="3" min="0"></td>
+                    <td><input type="number" class="currency-input" value="25" min="0"></td>
+                    <td class="row-total">$75.00</td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="concept-input" value="Mano de obra"></td>
+                    <td><input type="number" class="quantity-input" value="8" min="0"></td>
+                    <td><input type="number" class="currency-input" value="35" min="0"></td>
+                    <td class="row-total">$280.00</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="buttons">
+            <button class="btn add-row-btn" onclick="addRow()">Agregar Fila</button>
+            <button class="btn" onclick="exportPDF()">Descargar PDF</button>
+        </div>
+
+        <div class="total">
+            <p>Subtotal: $<span id="subtotal">585.00</span></p>
+            <p>IVA (16%): $<span id="iva">93.60</span></p>
+            <p>Total: $<span id="total">10000</span></p>
+        </div>
+
+        <div class="notes">
+            <h3>Notas:</h3>
+            <ul>
+                <li>Garant�a de 6 meses por defectos de fabricaci�n</li>
+                <li>Tiempo de entrega: 5-7 d�as h�biles</li>
+                <li>50% de anticipo para iniciar el trabajo</li>
+                <li>Precio sujeto a cambios si se modifican las especificaciones</li>
+            </ul>
+        </div>
+
+        <div class="contact">
+            <h3>Informaci�n de Contacto</h3>
+            <p>Name.</p>
+            <p> Empresa</p>
+            <p>Tel: (123) 445 6788</p>
+            <p>Email: mail@em.vpm</p>
+            <p>Direcci�n: .......
+</p>
+        </div>
+    </div>
+
+    <script>
+        // Establecer la fecha actual
+        const today = new Date();
+        const date = today.getDate() + '/' + (today.getMonth() + 1) + '/' + today.getFullYear();
+        document.getElementById('fecha').textContent = date;
+
+        // Funci�n para formatear n�meros como moneda
+        function formatCurrency(number) {
+            return new Intl.NumberFormat('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(number);
+        }
+
+        // Funci�n para calcular el total de una fila
+        function calculateRowTotal(row) {
+            const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            const price = parseFloat(row.querySelector('.currency-input').value) || 0;
+            const total = quantity * price;
+            row.querySelector('.row-total').textContent = '$' + formatCurrency(total);
+            return total;
+        }
+
+        // Funci�n para calcular todos los totales
+        function calculateTotals() {
+            const rows = document.querySelectorAll('#itemsTable tbody tr');
+            let subtotal = 0;
+
+            rows.forEach(row => {
+                subtotal += calculateRowTotal(row);
+            });
+
+            const iva = subtotal * 0.16;
+            const total = subtotal + iva;
+
+            document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+            document.getElementById('iva').textContent = formatCurrency(iva);
+            document.getElementById('total').textContent = formatCurrency(total);
+        }
+
+        // Funci�n para agregar una nueva fila
+        function addRow() {
+            const tbody = document.querySelector('#itemsTable tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="concept-input" value=""></td>
+                <td><input type="number" class="quantity-input" value="0" min="0"></td>
+                <td><input type="number" class="currency-input" value="0" min="0"></td>
+                <td class="row-total">$0.00</td>
+            `;
+            tbody.appendChild(newRow);
+            addEventListenersToRow(newRow);
+        }
+
+        // Funci�n para exportar a PDF
+        function exportPDF() {
+            window.print();
+        }
+
+        // Funci�n para agregar event listeners a una fila
+        function addEventListenersToRow(row) {
+            const inputs = row.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', calculateTotals);
+            });
+        }
+
+        // Agregar event listeners a todas las filas existentes
+        document.querySelectorAll('#itemsTable tbody tr').forEach(addEventListenersToRow);
+
+        // Calcular totales iniciales
+        calculateTotals();
+    </script>
+</body>
+</html>
