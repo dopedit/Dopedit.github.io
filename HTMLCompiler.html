@@ -1,478 +1,590 @@
-
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>
-:root {
-    --primary-color: #E47735;
-    --bg-dark: #131417;
-    --editor-bg: #262B2E;
-    --text-color: #ffffff;
-    --border-radius: 8px;
-}
-
-body {
-    margin: 0;
-    background: #000;
-    color: var(--text-color);
-    font-family: 'Segoe UI', Arial, sans-serif;
-    min-height: 100vh;
-    overflow: hidden;
-}
-
-.tabs {
-    background: var(--bg-dark);
-    padding: 10px 10px 0 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    position: relative;
-}
-
-.tab {
-    padding: 12px 24px;
-    background: none;
-    border: none;
-    color: var(--text-color);
-    cursor: pointer;
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
-    transition: background-color 0.3s, transform 0.2s;
-}
-
-.tab:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
-}
-
-.tab.active {
-    background: var(--editor-bg);
-    font-weight: bold;
-}
-
-.editor-container {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 60px);
-}
-
-textarea {
-    width: 100%;
-    height: 100%;
-    background: var(--editor-bg);
-    color: var(--text-color);
-    border: none;
-    padding: 15px;
-    display: none;
-    resize: none;
-    font-family: 'Consolas', 'Courier New', monospace;
-    font-size: 16px;
-    box-sizing: border-box;
-    line-height: 1.5;
-    tab-size: 2;
-}
-
-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.3);
-}
-
-textarea.active {
-    display: block;
-    animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0.5; }
-    to { opacity: 1; }
-}
-
-.button-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
-    z-index: 100;
-}
-
-.action-button {
-    width: 60px;
-    height: 60px;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    transition: transform 0.2s, background-color 0.3s;
-    background: var(--primary-color);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.action-button:hover {
-    transform: scale(1.1);
-    background: #f58c45;
-}
-
-#preview-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.92);
-    display: none;
-    z-index: 1000;
-    animation: modalFadeIn 0.3s;
-}
-
-@keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-#preview-iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: white;
-}
-
-#close-preview {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--primary-color);
-    z-index: 1001;
-}
-
-.claudit-brand {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    color: var(--primary-color);
-    font-size: 24px;
-    font-weight: bold;
-    z-index: 100;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    user-select: none;
-}
-
-.file-input-container {
-    position: absolute;
-    top: 50%;
-    right: 85px;
-    transform: translateY(-50%);
-    display: flex;
-    gap: 8px;
-}
-
-.file-input {
-    display: none;
-}
-
-.file-label {
-    padding: 8px 12px;
-    background: var(--primary-color);
-    color: white;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.file-label:hover {
-    transform: scale(1.05);
-    background: #f58c45;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    .tabs {
-        padding: 5px 5px 0 5px;
-    }
-    
-    .tab {
-        padding: 8px 16px;
-        font-size: 14px;
-        flex: 1;
-        text-align: center;
-    }
-    
-    textarea {
-        font-size: 14px;
-        padding: 10px;
-    }
-    
-    .action-button {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
-    }
-    
-    .button-container {
-        bottom: 10px;
-        right: 10px;
-        gap: 5px;
-    }
-    
-    .claudit-brand {
-        font-size: 20px;
-        top: 10px;
-        left: 10px;
-    }
-    
-    .file-input-container {
-        position: relative;
-        top: unset;
-        right: unset;
-        transform: none;
-        width: 100%;
-        margin-top: 10px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .file-label {
-        flex: 1;
-        text-align: center;
-        font-size: 10px;
-        padding: 6px;
-    }
-}
-
-@media (max-width: 480px) {
-    .tab {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-    
-    textarea {
-        font-size: 12px;
-        padding: 8px;
-    }
-    
-    .action-button {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-    }
-    
-    .claudit-brand {
-        font-size: 16px;
-    }
-}</style>
-                </head>
-                <body>
-                    <!DOCTYPE html>
-
-<html>
-<head>
-  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
-  <title>Hello, World!</title>
-</head>
-<body>
-  <h1>
-    Hello, World!
-  </h1>
-</body>
-</html>
-`html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claudit - Editor Web Mejorado</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Editor de Código</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --editor-bg: #fff;
+            --editor-text: #333;
+            --header-bg: #4a76a8;
+            --header-text: #fff;
+            --tab-active: #fff;
+            --tab-inactive: #e0e0e0;
+            --btn-primary: #4a76a8;
+            --btn-hover: #385d8a;
+            --line-numbers: #888;
+            --border-color: #ddd;
+            --icon-color: #555;
+        }
+
+        .dark-mode {
+            --bg-color: #1e1e1e;
+            --text-color: #f0f0f0;
+            --editor-bg: #2d2d2d;
+            --editor-text: #f0f0f0;
+            --header-bg: #333;
+            --header-text: #f0f0f0;
+            --tab-active: #3a3a3a;
+            --tab-inactive: #2a2a2a;
+            --btn-primary: #4a76a8;
+            --btn-hover: #5f8ac3;
+            --line-numbers: #888;
+            --border-color: #444;
+            --icon-color: #ccc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .theme-toggle span {
+            margin-right: 8px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .tabs {
+            display: flex;
+            background-color: var(--header-bg);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: var(--tab-inactive);
+            color: var(--text-color);
+            border: none;
+            outline: none;
+            margin-right: 2px;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+
+        .tab.active {
+            background-color: var(--tab-active);
+            font-weight: bold;
+        }
+
+        .editor-container {
+            display: flex;
+            background-color: var(--editor-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 5px 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            height: calc(100vh - 200px);
+            min-height: 300px;
+        }
+
+        .line-numbers {
+            background-color: var(--editor-bg);
+            color: var(--line-numbers);
+            padding: 10px 5px;
+            text-align: right;
+            font-family: monospace;
+            border-right: 1px solid var(--border-color);
+            user-select: none;
+            overflow-y: hidden;
+            width: 40px;
+        }
+
+        .editor {
+            flex: 1;
+            padding: 10px;
+            font-family: monospace;
+            resize: none;
+            border: none;
+            outline: none;
+            background-color: var(--editor-bg);
+            color: var(--editor-text);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            tab-size: 4;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            background-color: var(--btn-primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: var(--btn-hover);
+        }
+
+        .btn-small {
+            padding: 5px 8px;
+            font-size: 0.75rem;
+        }
+
+        .icon {
+            font-size: 1rem;
+            color: var(--icon-color);
+        }
+
+        .preview {
+            background-color: var(--editor-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            min-height: 200px;
+            overflow: auto;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .editor-container {
+                height: calc(100vh - 250px);
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-group {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .tab {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+
+            .btn {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="claudit-brand">Claudit</div>
-    
-    <div class="editor-container">
+    <header>
+        <h1>Editor de Código</h1>
+        <div class="theme-toggle">
+            <span>Modo Oscuro</span>
+            <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </header>
+
+    <div class="container">
         <div class="tabs">
-            <button class="tab active" id="tabHtml">HTML</button>
-            <button class="tab" id="tabCss">CSS</button>
-            <button class="tab" id="tabJs">JS</button>
-            <div class="file-input-container">
-                <input type="file" id="fileHtml" class="file-input" accept=".html,.htm">
-                <input type="file" id="fileCss" class="file-input" accept=".css">
-                <input type="file" id="fileJs" class="file-input" accept=".js">
-                <label for="fileHtml" class="file-label">Cargar HTML</label>
-                <label for="fileCss" class="file-label">Cargar CSS</label>
-                <label for="fileJs" class="file-label">Cargar JS</label>
+            <button class="tab active" data-tab="html">HTML</button>
+            <button class="tab" data-tab="css">CSS</button>
+            <button class="tab" data-tab="js">JavaScript</button>
+        </div>
+
+        <div class="editor-container">
+            <div class="line-numbers" id="lineNumbers"></div>
+            <textarea id="editor" class="editor" spellcheck="false"></textarea>
+        </div>
+
+        <div class="toolbar">
+            <div class="btn-group">
+                <button class="btn btn-small" id="copyBtn" title="Copiar">
+                    <i class="icon">📋</i> Copiar
+                </button>
+                <button class="btn btn-small" id="cutBtn" title="Cortar">
+                    <i class="icon">✂️</i> Cortar
+                </button>
+                <button class="btn btn-small" id="pasteBtn" title="Pegar">
+                    <i class="icon">📌</i> Pegar
+                </button>
+                <button class="btn btn-small" id="deleteBtn" title="Borrar">
+                    <i class="icon">🗑️</i> Borrar
+                </button>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" id="runBtn" title="Ejecutar">
+                    <i class="icon">▶️</i> Ejecutar
+                </button>
+                <button class="btn" id="downloadBtn" title="Descargar">
+                    <i class="icon">⬇️</i> Descargar
+                </button>
             </div>
         </div>
+
+        <div class="preview-header">
+            <h2>Vista Previa</h2>
+        </div>
+        <div class="preview" id="preview"></div>
+    </div>
+
+    <script>
+        // Variables para almacenar código
+        let htmlCode = '<!DOCTYPE html>\n<html>\n<head>\n  <title>Mi Página</title>\n</head>\n<body>\n  <h1>Hola Mundo!</h1>\n  <p>Este es un ejemplo.</p>\n</body>\n</html>';
+        let cssCode = 'body {\n  font-family: Arial, sans-serif;\n  margin: 20px;\n}\n\nh1 {\n  color: #4a76a8;\n}';
+        let jsCode = 'document.addEventListener("DOMContentLoaded", function() {\n  console.log("Página cargada!");\n});';
         
-        <textarea id="html" class="active" spellcheck="false" placeholder="Escribe tu código HTML aquí..."></textarea>
-        <textarea id="css" spellcheck="false" placeholder="Escribe tu código CSS aquí..."></textarea>
-        <textarea id="js" spellcheck="false" placeholder="Escribe tu código JavaScript aquí..."></textarea>
-    </div>
-    
-    <div class="button-container">
-        <button id="run" class="action-button" title="Ejecutar">▶</button>
-        <button id="download" class="action-button" title="Descargar">⭳</button>
-        <button id="clear" class="action-button" title="Limpiar">🗑️</button>
-    </div>
-    
-    <div id="preview-container">
-        <button id="close-preview" class="action-button">✕</button>
-        <iframe id="preview-iframe"></iframe>
-    </div>
-    
-    <script src="script.js"></script>
-</body>
-</html>
+        let currentTab = 'html';
+        let currentCode = htmlCode;
 
-                    <script>// Manejo de pestañas
-let tabs = document.querySelectorAll('.tab');
-let areas = document.querySelectorAll('textarea');
-
-// Guardar el estado en localStorage
-function saveToLocalStorage() {
-    localStorage.setItem('clauditHtml', document.getElementById('html').value);
-    localStorage.setItem('clauditCss', document.getElementById('css').value);
-    localStorage.setItem('clauditJs', document.getElementById('js').value);
-    localStorage.setItem('clauditLastUpdated', new Date().toISOString());
-}
-
-// Cargar el estado desde localStorage
-function loadFromLocalStorage() {
-    const html = localStorage.getItem('clauditHtml');
-    const css = localStorage.getItem('clauditCss');
-    const js = localStorage.getItem('clauditJs');
-    
-    if (html) document.getElementById('html').value = html;
-    if (css) document.getElementById('css').value = css;
-    if (js) document.getElementById('js').value = js;
-}
-
-// Cargar estado al iniciar
-document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
-
-// Cambiar entre pestañas
-tabs.forEach(tab => {
-    tab.onclick = () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        areas.forEach(a => a.classList.remove('active'));
+        // Elementos DOM
+        const editor = document.getElementById('editor');
+        const lineNumbers = document.getElementById('lineNumbers');
+        const tabs = document.querySelectorAll('.tab');
+        const preview = document.getElementById('preview');
+        const darkModeToggle = document.getElementById('darkModeToggle');
         
-        tab.classList.add('active');
-        document.getElementById(tab.id.substring(3).toLowerCase()).classList.add('active');
-    }
-});
+        // Botones
+        const copyBtn = document.getElementById('copyBtn');
+        const cutBtn = document.getElementById('cutBtn');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const runBtn = document.getElementById('runBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
 
-// Guardar automáticamente al escribir
-areas.forEach(area => {
-    area.addEventListener('input', () => {
-        saveToLocalStorage();
-    });
-});
+        // Inicialización
+        editor.value = htmlCode;
+        updateLineNumbers();
+        
+        // Comprobar preferencia de tema oscuro
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.checked = true;
+        }
 
-// Compilar HTML, CSS y JS
-function getCompiledHTML() {
-    return `<!DOCTYPE html>
+        // Event listeners
+        editor.addEventListener('input', function() {
+            updateLineNumbers();
+            saveCurrentCode();
+        });
+
+        editor.addEventListener('scroll', function() {
+            lineNumbers.scrollTop = editor.scrollTop;
+        });
+
+        darkModeToggle.addEventListener('change', function() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', darkModeToggle.checked);
+        });
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                setActiveTab(tabName);
+            });
+        });
+
+        copyBtn.addEventListener('click', function() {
+            copyToClipboard();
+        });
+
+        cutBtn.addEventListener('click', function() {
+            cutToClipboard();
+        });
+
+        pasteBtn.addEventListener('click', function() {
+            pasteFromClipboard();
+        });
+
+        deleteBtn.addEventListener('click', function() {
+            deleteSelection();
+        });
+
+        runBtn.addEventListener('click', function() {
+            runCode();
+        });
+
+        downloadBtn.addEventListener('click', function() {
+            downloadFiles();
+        });
+
+        // Funciones
+        function updateLineNumbers() {
+            const lines = editor.value.split('\n');
+            let lineNumbersHTML = '';
+            
+            for (let i = 0; i < lines.length; i++) {
+                lineNumbersHTML += (i + 1) + '<br>';
+            }
+            
+            lineNumbers.innerHTML = lineNumbersHTML;
+        }
+
+        function setActiveTab(tabName) {
+            // Guardar código actual
+            saveCurrentCode();
+            
+            // Actualizar tab activa
+            tabs.forEach(tab => {
+                if (tab.getAttribute('data-tab') === tabName) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Cambiar código en editor
+            currentTab = tabName;
+            switch (tabName) {
+                case 'html':
+                    currentCode = htmlCode;
+                    break;
+                case 'css':
+                    currentCode = cssCode;
+                    break;
+                case 'js':
+                    currentCode = jsCode;
+                    break;
+            }
+            
+            editor.value = currentCode;
+            updateLineNumbers();
+        }
+
+        function saveCurrentCode() {
+            switch (currentTab) {
+                case 'html':
+                    htmlCode = editor.value;
+                    break;
+                case 'css':
+                    cssCode = editor.value;
+                    break;
+                case 'js':
+                    jsCode = editor.value;
+                    break;
+            }
+        }
+
+        function copyToClipboard() {
+            editor.select();
+            document.execCommand('copy');
+            
+            // Deseleccionar después de copiar
+            const selectionStart = editor.selectionStart;
+            const selectionEnd = editor.selectionEnd;
+            if (selectionStart === selectionEnd) {
+                editor.setSelectionRange(selectionStart, selectionStart);
+            }
+        }
+
+        function cutToClipboard() {
+            editor.select();
+            document.execCommand('cut');
+        }
+
+        function pasteFromClipboard() {
+            try {
+                navigator.clipboard.readText().then(text => {
+                    const selStart = editor.selectionStart;
+                    const selEnd = editor.selectionEnd;
+                    const textBefore = editor.value.substring(0, selStart);
+                    const textAfter = editor.value.substring(selEnd);
+                    
+                    editor.value = textBefore + text + textAfter;
+                    editor.selectionStart = editor.selectionEnd = selStart + text.length;
+                    
+                    saveCurrentCode();
+                    updateLineNumbers();
+                });
+            } catch (err) {
+                alert('El navegador no permite pegar. Usa Ctrl+V.');
+            }
+        }
+
+        function deleteSelection() {
+            const selStart = editor.selectionStart;
+            const selEnd = editor.selectionEnd;
+            
+            if (selStart !== selEnd) {
+                const textBefore = editor.value.substring(0, selStart);
+                const textAfter = editor.value.substring(selEnd);
+                editor.value = textBefore + textAfter;
+                editor.selectionStart = editor.selectionEnd = selStart;
+                
+                saveCurrentCode();
+                updateLineNumbers();
+            }
+        }
+
+        function runCode() {
+            const combinedHTML = `
+                <style>${cssCode}</style>
+                ${getCleanHTML()}
+                <script>${jsCode}<\/script>
+            `;
+            
+            preview.innerHTML = '';
+            const iframe = document.createElement('iframe');
+            iframe.style.width = '100%';
+            iframe.style.height = '300px';
+            iframe.style.border = 'none';
+            
+            preview.appendChild(iframe);
+            
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(combinedHTML);
+            iframeDoc.close();
+        }
+
+        function getCleanHTML() {
+            // Extraer solo el contenido del body si existe una estructura HTML completa
+            const bodyMatch = htmlCode.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            return bodyMatch ? bodyMatch[1] : htmlCode;
+        }
+
+        function downloadFiles() {
+            // Crear un archivo HTML que incluye CSS y JS
+            const fullHTML = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>${document.getElementById('css').value}</style>
+    <title>Documento</title>
+    <style>
+${cssCode}
+    </style>
 </head>
 <body>
-    ${document.getElementById('html').value}
-    <script>${document.getElementById('js').value}<\/script>
+${getCleanHTML()}
+    <script>
+${jsCode}
+    </script>
 </body>
 </html>`;
-}
 
-// Ejecutar código
-document.getElementById('run').onclick = () => {
-    const previewContainer = document.getElementById('preview-container');
-    const previewIframe = document.getElementById('preview-iframe');
-    
-    // Guardar estado actual
-    saveToLocalStorage();
-    
-    // Mostrar la vista previa
-    previewContainer.style.display = 'block';
-    previewIframe.srcdoc = getCompiledHTML();
-}
-
-// Cerrar vista previa
-document.getElementById('close-preview').onclick = () => {
-    document.getElementById('preview-container').style.display = 'none';
-}
-
-// Descargar archivo HTML
-document.getElementById('download').onclick = () => {
-    const file = getCompiledHTML();
-    const blob = new Blob([file], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    
-    link.href = url;
-    link.download = 'claudit-proyecto.html';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-}
-
-// Nuevo botón para limpiar editor
-document.getElementById('clear').onclick = () => {
-    if (confirm('¿Estás seguro de que quieres limpiar todo el código?')) {
-        document.getElementById('html').value = '';
-        document.getElementById('css').value = '';
-        document.getElementById('js').value = '';
-        saveToLocalStorage();
-    }
-}
-
-// Cargar archivos 
-function handleFileSelect(fileInput, textareaId) {
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById(textareaId).value = e.target.result;
-                saveToLocalStorage();
-            };
-            reader.readAsText(file);
+            const blob = new Blob([fullHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'proyecto.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
-    });
-}
 
-// Configurar los manejadores de archivo para cada tipo
-handleFileSelect(document.getElementById('fileHtml'), 'html');
-handleFileSelect(document.getElementById('fileCss'), 'css');
-handleFileSelect(document.getElementById('fileJs'), 'js');
-
-// Soporte para atajos de teclado
-document.addEventListener('keydown', function(e) {
-    // Ctrl+S para ejecutar
-    if (e.ctrlKey && e.key === 's') {
-        e.preventDefault();
-        document.getElementById('run').click();
-    }
-    
-    // Ctrl+D para descargar
-    if (e.ctrlKey && e.key === 'd') {
-        e.preventDefault();
-        document.getElementById('download').click();
-    }
-    
-    // Tab para indentación en las áreas de texto
-    if (e.key === 'Tab' && document.activeElement.tagName === 'TEXTAREA') {
-        e.preventDefault();
-        const start = document.activeElement.selectionStart;
-        const end = document.activeElement.selectionEnd;
-        
-        document.activeElement.value = document.activeElement.value.substring(0, start) + '  ' + document.activeElement.value.substring(end);
-        document.activeElement.selectionStart = document.activeElement.selectionEnd = start + 2;
-        saveToLocalStorage();
-    }
-});</script>
-                </body>
-            </html>
-        
+        // Iniciar la aplicación mostrando el HTML y ejecutando el código
+        updateLineNumbers();
+        runCode();
+    </script>
+</body>
+</html>
